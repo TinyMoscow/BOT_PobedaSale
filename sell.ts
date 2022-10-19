@@ -1,14 +1,9 @@
 import { Markup, Scenes, Context } from "telegraf";
+import { MyContext } from "./types";
 
-interface SessionData {
-  heyCounter: number;
-}
+type TDictionary = Record<string, string>;
 
-interface BotContext extends Context {
-  session?: SessionData;
-}
-
-const dictionary = {
+const dictionary: TDictionary = {
   coat: "Плащ",
   jacket: "Пуховик",
   blazer: "Пиджак",
@@ -21,19 +16,21 @@ const dictionary = {
   other: "Прочее",
 };
 
-const button = (name) => {
-  let text = dictionary[name];
+const button = (name: string) => {
+  const text = dictionary[name as string];
   return Markup.button.callback(text, name);
 };
 
 const keyboard = () => {
   const arr = Object.keys(dictionary);
 
-  const splitter = (arr, chunkSize) => {
-    const res = [];
+  const splitter = (arr: any[], chunkSize: number) => {
+    const res: any[] = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
-      const chunk: any[] = arr.slice(i, i + chunkSize);
-      res.push(chunk);
+      const chunk = arr.slice(i, i + chunkSize);
+      if (chunk) {
+        res.push(chunk);
+      }
     }
     return res;
   };
@@ -46,7 +43,7 @@ const keyboard = () => {
   );
 };
 
-export const sellScene = new Scenes.BaseScene("sellScene");
+export const sellScene = new Scenes.BaseScene<MyContext>("sellScene");
 
 sellScene.enter((ctx) => {
   ctx.reply(
@@ -57,33 +54,9 @@ sellScene.enter((ctx) => {
 });
 
 sellScene.on("callback_query", (ctx) => {
-  let type = dictionary[ctx.update.callback_query.data];
-
-  ctx.editMessageText(`Отлично, ты выбрал ${type}\nТеперь пришли фотку`); //Empty markup
+  if (ctx?.update?.callback_query?.data) {
+    const name: string = ctx?.update?.callback_query?.data;
+    const text = dictionary[name];
+    ctx.editMessageText(`Отлично, ты выбрал ${text}\nТеперь пришли фотку`); //Empty markup
+  }
 });
-
-// sellScene.action("coat", (ctx) => {
-//   // const type = ctx.callbackQuery;
-//   ctx.reply(`Отлично ты выбрал Плащ`);
-// });
-
-// SellScene.action("THEATER_ACTION", (ctx) => {
-//   ctx.reply("You choose theater");
-//   ctx.session.myData.preferenceType = "Theater";
-//   return ctx.scene.enter("SOME_OTHER_SCENE_ID"); // switch to some other scene
-// });
-
-// SellScene.action("MOVIE_ACTION", (ctx) => {
-//   ctx.reply("You choose movie, your loss");
-//   ctx.session.myData.preferenceType = "Movie";
-//   return ctx.scene.leave(); // exit global namespace
-// });
-
-// SellScene.leave((ctx) => {
-//   ctx.reply("Thank you for your time!");
-// });
-
-// // What to do if user entered a raw message or picked some other option?
-// SellScene.use((ctx) =>
-//   ctx.replyWithMarkdown("Please choose either Movie or Theater")
-// );

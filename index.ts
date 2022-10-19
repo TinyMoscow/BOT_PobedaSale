@@ -1,34 +1,24 @@
-import { Telegraf, Markup, Scenes, session, Context } from "telegraf";
-import { SessionContext } from "telegraf/typings/session";
+import { Markup, Scenes, session, Telegraf } from "telegraf";
+import { MyContext } from "./types";
 
 import { sellScene } from "./sell";
 
-interface Session {
-  foo: string;
-}
-
-type BaseBotContext = SessionContext<Session>;
-
-interface BotContext extends BaseBotContext {
-  // session: Session;
-}
-
-const bot = new Telegraf<BotContext>(
+const bot = new Telegraf<MyContext>(
   "5733422116:AAFcCMIk7VejLmEnAlrhI-DHN1CIyprIsAM"
 );
 
-const stage = new Scenes.Stage<BotContext>([sellScene]);
-bot.use(session()); // to  be precise, session is not a must have for Scenes to work, but it sure is lonely without one
+const stage = new Scenes.Stage<MyContext>([sellScene]);
+bot.use(session());
 bot.use(stage.middleware());
 
-bot.start((ctx: Context) =>
+bot.start((ctx) =>
   ctx.reply(
     "Привет!\nЯ помогу тебе продать или купить форму.\nЖми /go и погнали!"
   )
 );
-bot.help((ctx: Context) => ctx.reply("later"));
+bot.help((ctx) => ctx.reply("later"));
 
-bot.command("go", async (ctx: Context) => {
+bot.command("go", async (ctx) => {
   try {
     await ctx.replyWithHTML(
       "Для начала определимся что нужно сделать...",
@@ -45,11 +35,11 @@ bot.command("go", async (ctx: Context) => {
   }
 });
 
-bot.action("sell", async (ctx: Context) => {
-  await ctx.scene.enter("sellScene");
+bot.action("sell", async (ctx) => {
+  await ctx?.scene.enter("sellScene");
 });
 
-bot.action("buy", async (ctx: Context) => {
+bot.action("buy", async (ctx) => {
   try {
     console.log(ctx);
   } catch (e) {
@@ -57,7 +47,7 @@ bot.action("buy", async (ctx: Context) => {
   }
 });
 
-bot.action("showroom", async (ctx: Context) => {
+bot.action("showroom", async (ctx) => {
   try {
     await ctx.reply("У вас пока нет товаров =(");
   } catch (e) {
